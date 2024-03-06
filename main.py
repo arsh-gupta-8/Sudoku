@@ -41,14 +41,43 @@ def set_dimensions():
     pygame.draw.rect(screen, DARK_GREY, pygame.Rect(0, 234, 482, 164), 5)
 
 
+def find_box_dim(x_val, y_val):
+    x_box = -1
+    y_box = -1
+    addition = 0
+    for box in range(9):
+        if x_val >= 5 + 50 * box + addition:
+            x_box += 1
+        if y_val >= 80 + 50 * box + addition:
+            y_box += 1
+        addition += 2
+        if box % 3 == 2:
+            addition += 3
+
+    a = x_box * 50 + (x_box // 3) * 3 + x_box * 2 + 5
+    b = y_box * 50 + (y_box // 3) * 3 + y_box * 2 + 80
+
+    return a, b
+
+
 # Main game loop
 running = True
 while running:
+
+    x, y = pygame.mouse.get_pos()
 
     for event in pygame.event.get():
 
         if event.type == pygame.QUIT:
             running = False
+
+        elif event.type == pygame.MOUSEBUTTONDOWN:
+            if event.button == 1:
+                colour_clicked = screen.get_at((x, y))[:3]
+                if 5 <= x <= 477 and 80 <= y <= 552 and colour_clicked != DARK_GREY and colour_clicked != LIGHT_GREY:
+                    print("inside")
+                    x_place, y_place = find_box_dim(x, y)
+                    pygame.draw.rect(screen, LIGHT_GREY, pygame.Rect(x_place, y_place, 50, 50))
 
     set_dimensions()
     pygame.display.update()
