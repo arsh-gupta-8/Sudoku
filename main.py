@@ -36,13 +36,16 @@ for row in range(9):
 # Game settings
 place_holder_rect = None
 hovering_box = None
-x_above = 0
-y_left = 0
+x_line = None
+y_line = None
 
 
 # Update screen
-def window_update(grid_rect, grid_hover):
+def window_update(grid_rect, grid_hover, lines):
     screen.fill(BACKGROUND_SHADE)
+    if lines[0] is not None:
+        for line in lines:
+            pygame.draw.rect(screen, BOX_SHADE_MEDIUM, line)
     set_dimensions()
     if grid_hover is not None:
         pygame.draw.rect(screen, BOX_SHADE_LIGHT, grid_hover)
@@ -80,7 +83,7 @@ def find_box_dim(x_val, y_val):
     x_box_cord = x_box * 50 + (x_box // 3) * 3 + x_box * 2 + 55
     y_box_cord = y_box * 50 + (y_box // 3) * 3 + y_box * 2 + 55
 
-    return x_box_cord, y_box_cord, x_box, y_box
+    return x_box_cord, y_box_cord
 
 
 # Main game loop
@@ -100,19 +103,23 @@ while running:
                 if 55 <= x <= 527 and 55 <= y <= 527:
                     if colour_clicked == SELECT_BOX:
                         place_holder_rect = None
+                        x_line = None
+                        y_line = None
                     elif colour_clicked not in [DARK_GREY, LIGHT_GREY, SUPER_LIGHT_GREY]:
-                        x_place, y_place, x_above, y_left = find_box_dim(x, y)
+                        x_place, y_place = find_box_dim(x, y)
                         place_holder_rect = pygame.Rect(x_place, y_place, 50, 50)
+                        x_line = pygame.Rect(x_place, 50, 50, 482)
+                        y_line = pygame.Rect(50, y_place, 482, 50)
 
     if 55 <= x <= 527 and 55 <= y <= 527:
         colour_clicked = screen.get_at((x, y))[:3]
         if colour_clicked not in [DARK_GREY, LIGHT_GREY, SUPER_LIGHT_GREY]:
-            x_place, y_place, not_needed, not_needed2 = find_box_dim(x, y)
+            x_place, y_place = find_box_dim(x, y)
             hovering_box = pygame.Rect(x_place, y_place, 50, 50)
             if hovering_box == place_holder_rect:
                 hovering_box = None
     else:
         hovering_box = None
 
-    window_update(place_holder_rect, hovering_box)
+    window_update(place_holder_rect, hovering_box, [x_line, y_line])
     clock.tick(FPS)
