@@ -12,11 +12,16 @@ SUPER_LIGHT_GREY = (211, 211, 211)
 LIGHT_GREY = (118, 118, 118)
 DARK_GREY = (64, 64, 64)
 BLACK = (0, 0, 0)
+BACKGROUND_SHADE = (232, 234, 236)
+BOX_SHADE_LIGHT = (212, 212, 212)
+BOX_SHADE_MEDIUM = (191, 191, 191)
+BOX_SHADE_DARK = (170, 170, 170)
+SELECT_BOX = (140, 180, 207)
 
 # Screen management
 screen = pygame.display.set_mode((902, 582))
 pygame.display.set_caption('Sudoku Game')
-screen.fill(WHITE)
+screen.fill(BACKGROUND_SHADE)
 
 # Font management
 number_font = pygame.font.SysFont("Ariel", 40)
@@ -30,14 +35,19 @@ for row in range(9):
 
 # Game settings
 place_holder_rect = None
+hovering_box = None
+x_above = 0
+y_left = 0
 
 
 # Update screen
-def window_update(grid_rect):
-    screen.fill(WHITE)
+def window_update(grid_rect, grid_hover):
+    screen.fill(BACKGROUND_SHADE)
     set_dimensions()
+    if grid_hover is not None:
+        pygame.draw.rect(screen, BOX_SHADE_LIGHT, grid_hover)
     if grid_rect is not None:
-        pygame.draw.rect(screen, SUPER_LIGHT_GREY, grid_rect)
+        pygame.draw.rect(screen, SELECT_BOX, grid_rect)
     pygame.display.update()
 
 
@@ -67,10 +77,10 @@ def find_box_dim(x_val, y_val):
         if box % 3 == 2:
             addition += 3
 
-    a = x_box * 50 + (x_box // 3) * 3 + x_box * 2 + 55
-    b = y_box * 50 + (y_box // 3) * 3 + y_box * 2 + 55
+    x_box_cord = x_box * 50 + (x_box // 3) * 3 + x_box * 2 + 55
+    y_box_cord = y_box * 50 + (y_box // 3) * 3 + y_box * 2 + 55
 
-    return a, b
+    return x_box_cord, y_box_cord, x_box, y_box
 
 
 # Main game loop
@@ -87,11 +97,22 @@ while running:
         elif event.type == pygame.MOUSEBUTTONDOWN:
             if event.button == 1:
                 colour_clicked = screen.get_at((x, y))[:3]
-                if 55 <= x <= 527 and 55 <= y <= 527 and colour_clicked not in [DARK_GREY, LIGHT_GREY, SUPER_LIGHT_GREY]:
-                    x_place, y_place = find_box_dim(x, y)
-                    place_holder_rect = pygame.Rect(x_place, y_place, 50, 50)
-                elif colour_clicked == SUPER_LIGHT_GREY:
-                    place_holder_rect = None
+                if 55 <= x <= 527 and 55 <= y <= 527:
+                    if colour_clicked == SELECT_BOX:
+                        place_holder_rect = None
+                    elif colour_clicked not in [DARK_GREY, LIGHT_GREY, SUPER_LIGHT_GREY]:
+                        x_place, y_place, x_above, y_left = find_box_dim(x, y)
+                        place_holder_rect = pygame.Rect(x_place, y_place, 50, 50)
 
-    window_update(place_holder_rect)
+    if 55 <= x <= 527 and 55 <= y <= 527:
+        colour_clicked = screen.get_at((x, y))[:3]
+        if colour_clicked not in [DARK_GREY, LIGHT_GREY, SUPER_LIGHT_GREY]:
+            x_place, y_place, not_needed, not_needed2 = find_box_dim(x, y)
+            hovering_box = pygame.Rect(x_place, y_place, 50, 50)
+            if hovering_box == place_holder_rect:
+                hovering_box = None
+    else:
+        hovering_box = None
+
+    window_update(place_holder_rect, hovering_box)
     clock.tick(FPS)
