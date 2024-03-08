@@ -24,7 +24,7 @@ pygame.display.set_caption('Sudoku Game')
 screen.fill(BACKGROUND_SHADE)
 
 # Font management
-number_font = pygame.font.SysFont("Ariel", 40)
+number_font = pygame.font.SysFont("Ariel", 60)
 
 # Making grid/2D array for storing game numbers
 grid = []
@@ -34,14 +34,18 @@ for row in range(9):
         grid[row].append(0)
 
 # Game settings
+GAME_NUMS = [pygame.K_1, pygame.K_2, pygame.K_3, pygame.K_4, pygame.K_5, pygame.K_6, pygame.K_7, pygame.K_8, pygame.K_9]
 place_holder_rect = None
 hovering_box = None
+x_place = None
+y_place = None
 x_line = None
 y_line = None
+selected = False
 
 
 # Update screen
-def window_update(grid_rect, grid_hover, lines):
+def window_update(grid_rect, grid_hover, lines, game_grid):
     screen.fill(BACKGROUND_SHADE)
     if lines[0] is not None:
         for line in lines:
@@ -51,6 +55,14 @@ def window_update(grid_rect, grid_hover, lines):
         pygame.draw.rect(screen, BOX_SHADE_LIGHT, grid_hover)
     if grid_rect is not None:
         pygame.draw.rect(screen, SELECT_BOX, grid_rect)
+    for grid_y in range(9):
+        for grid_x in range(9):
+            current_num = game_grid[grid_y][grid_x]
+            if current_num != 0:
+                num_display = number_font.render(str(current_num), False, BLACK)
+                x_pos = 80 + 50 * grid_x + grid_x * 2 + (grid_x // 3) * 3 - num_display.get_width()//2
+                y_pos = 80 + 50 * grid_y + grid_y * 2 + (grid_y // 3) * 3 - num_display.get_height()//2
+                screen.blit(num_display, (x_pos, y_pos))
     pygame.display.update()
 
 
@@ -67,7 +79,7 @@ def set_dimensions():
     pygame.draw.rect(screen, DARK_GREY, pygame.Rect(50, 209, 482, 164), 5)
 
 
-def find_box_dim(x_val, y_val):
+def find_box_dim(data, x_val, y_val):
     x_box = -1
     y_box = -1
     addition = 0
@@ -80,10 +92,13 @@ def find_box_dim(x_val, y_val):
         if box % 3 == 2:
             addition += 3
 
-    x_box_cord = x_box * 50 + (x_box // 3) * 3 + x_box * 2 + 55
-    y_box_cord = y_box * 50 + (y_box // 3) * 3 + y_box * 2 + 55
+    if data == 1:
+        x_box_cord = x_box * 50 + (x_box // 3) * 3 + x_box * 2 + 55
+        y_box_cord = y_box * 50 + (y_box // 3) * 3 + y_box * 2 + 55
 
-    return x_box_cord, y_box_cord
+        return x_box_cord, y_box_cord
+    elif data == 2:
+        return x_box, y_box
 
 
 # Main game loop
@@ -102,24 +117,32 @@ while running:
                 colour_clicked = screen.get_at((x, y))[:3]
                 if 55 <= x <= 527 and 55 <= y <= 527:
                     if colour_clicked == SELECT_BOX:
+                        selected = False
                         place_holder_rect = None
                         x_line = None
                         y_line = None
                     elif colour_clicked not in [DARK_GREY, LIGHT_GREY, SUPER_LIGHT_GREY]:
-                        x_place, y_place = find_box_dim(x, y)
+                        selected = True
+                        x_place, y_place = find_box_dim(1, x, y)
                         place_holder_rect = pygame.Rect(x_place, y_place, 50, 50)
                         x_line = pygame.Rect(x_place, 50, 50, 482)
                         y_line = pygame.Rect(50, y_place, 482, 50)
 
+        elif event.type == pygame.KEYDOWN:
+            for pygame_number in GAME_NUMS:
+                if event.key == pygame_number:
+                    x_place_index, y_place_index = find_box_dim(2, x_place, y_place)
+                    grid[y_place_index][x_place_index] = GAME_NUMS.index(pygame_number) + 1
+
     if 55 <= x <= 527 and 55 <= y <= 527:
         colour_clicked = screen.get_at((x, y))[:3]
         if colour_clicked not in [DARK_GREY, LIGHT_GREY, SUPER_LIGHT_GREY]:
-            x_place, y_place = find_box_dim(x, y)
-            hovering_box = pygame.Rect(x_place, y_place, 50, 50)
+            x_cursor_box, y_cursor_box = find_box_dim(1, x, y)
+            hovering_box = pygame.Rect(x_cursor_box, y_cursor_box, 50, 50)
             if hovering_box == place_holder_rect:
                 hovering_box = None
     else:
         hovering_box = None
 
-    window_update(place_holder_rect, hovering_box, [x_line, y_line])
+    window_update(place_holder_rect, hovering_box, [x_line, y_line], grid)
     clock.tick(FPS)
