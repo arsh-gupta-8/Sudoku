@@ -17,6 +17,7 @@ BOX_SHADE_LIGHT = (212, 212, 212)
 BOX_SHADE_MEDIUM = (200, 200, 200)
 BOX_SHADE_DARK = (170, 170, 170)
 SELECT_BOX = (140, 180, 207)
+SOL_RED = (197, 30, 58)
 
 # Screen management
 screen = pygame.display.set_mode((902, 582))
@@ -65,11 +66,17 @@ def check_square(x_cord, y_cord, search_number, search_grid):
 
 
 def solve_game(given_grid, temp_grid):
+    error_iter = 0
     y_val = 0
     x_val = 0
     forward = True
 
     while y_val < 9:
+
+        error_iter += 1
+        if error_iter >= 100000:
+            print("no answer found")
+            return grid, grid
 
         if given_grid[y_val][x_val] == 0 and forward:
             start = temp_grid[y_val][x_val] + 1
@@ -86,6 +93,9 @@ def solve_game(given_grid, temp_grid):
             if not move_on:
                 temp_grid[y_val][x_val] = 0
                 forward = False
+                if x_val == 0 and y_val == 0:
+                    print("not possible")
+                    return grid
 
             else:
                 x_val += 1
@@ -108,7 +118,7 @@ def solve_game(given_grid, temp_grid):
             if given_grid[y_val][x_val] == 0:
                 forward = True
 
-    return temp_grid
+    return temp_grid, temp_grid
 
 
 # Game settings
@@ -120,10 +130,11 @@ y_place = None
 x_line = None
 y_line = None
 selected = False
+numbers_stated = [100]
 
 
 # Update screen
-def window_update(grid_rect, grid_hover, lines, game_grid):
+def window_update(grid_rect, grid_hover, lines, game_grid, num_positions):
     screen.fill(BACKGROUND_SHADE)
     if lines[0] is not None:
         for line in lines:
@@ -138,6 +149,9 @@ def window_update(grid_rect, grid_hover, lines, game_grid):
             current_num = game_grid[grid_y][grid_x]
             if current_num != 0:
                 num_display = number_font.render(str(current_num), False, BLACK)
+                if num_positions[0] != 100:
+                    if [grid_y, grid_x] not in num_positions:
+                        num_display = number_font.render(str(current_num), False, SOL_RED)
                 x_pos = 80 + 50 * grid_x + grid_x * 2 + (grid_x // 3) * 3 - num_display.get_width()//2
                 y_pos = 80 + 50 * grid_y + grid_y * 2 + (grid_y // 3) * 3 - num_display.get_height()//2
                 screen.blit(num_display, (x_pos, y_pos))
@@ -211,6 +225,15 @@ while running:
                 if event.key == pygame_number:
                     x_place_index, y_place_index = find_box_dim(2, x_place, y_place)
                     grid[y_place_index][x_place_index] = GAME_NUMS.index(pygame_number) + 1
+                    grid_copy[y_place_index][x_place_index] = GAME_NUMS.index(pygame_number) + 1
+
+            if event.key == pygame.K_SPACE:
+                numbers_stated.pop()
+                for col in range(9):
+                    for row in range(9):
+                        if grid[col][row] != 0:
+                            numbers_stated.append([col, row])
+                grid, grid_copy = solve_game(grid, grid_copy)
 
     if 55 <= x <= 527 and 55 <= y <= 527:
         colour_clicked = screen.get_at((x, y))[:3]
@@ -222,5 +245,5 @@ while running:
     else:
         hovering_box = None
 
-    window_update(place_holder_rect, hovering_box, [x_line, y_line], grid)
+    window_update(place_holder_rect, hovering_box, [x_line, y_line], grid, numbers_stated)
     clock.tick(FPS)
