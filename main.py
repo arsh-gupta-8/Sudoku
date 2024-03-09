@@ -14,7 +14,7 @@ DARK_GREY = (64, 64, 64)
 BLACK = (0, 0, 0)
 BACKGROUND_SHADE = (232, 234, 236)
 BOX_SHADE_LIGHT = (212, 212, 212)
-BOX_SHADE_MEDIUM = (191, 191, 191)
+BOX_SHADE_MEDIUM = (200, 200, 200)
 BOX_SHADE_DARK = (170, 170, 170)
 SELECT_BOX = (140, 180, 207)
 
@@ -32,6 +32,84 @@ for row in range(9):
     grid.append([])
     for column in range(9):
         grid[row].append(0)
+
+grid_copy = []
+for row in range(9):
+    grid_copy.append([])
+    for column in range(9):
+        grid_copy[row].append(0)
+
+
+def check_square(x_cord, y_cord, search_number, search_grid):
+
+    if search_number in search_grid[y_cord]:
+        return False
+
+    for y_adjacent in range(y_cord):
+        if search_number == search_grid[y_adjacent][x_cord]:
+            return False
+
+    for y_adjacent in range(y_cord + 1, 9):
+        if search_number == search_grid[y_adjacent][x_cord]:
+            return False
+
+    x_cord = (x_cord//3) * 3
+    y_cord = (y_cord//3) * 3
+
+    for down in range(y_cord, y_cord+3):
+        for across in range(x_cord, x_cord+3):
+            if search_grid[down][across] == search_number:
+                return False
+
+    return True
+
+
+def solve_game(given_grid, temp_grid):
+    y_val = 0
+    x_val = 0
+    forward = True
+
+    while y_val < 9:
+
+        if given_grid[y_val][x_val] == 0 and forward:
+            start = temp_grid[y_val][x_val] + 1
+            move_on = False
+
+            for possible_num in range(start, 10):
+                passed = check_square(x_val, y_val, possible_num, temp_grid)
+
+                if passed:
+                    move_on = True
+                    temp_grid[y_val][x_val] = possible_num
+                    break
+
+            if not move_on:
+                temp_grid[y_val][x_val] = 0
+                forward = False
+
+            else:
+                x_val += 1
+                if x_val == 9:
+                    y_val += 1
+                    x_val = 0
+
+        elif forward:
+            x_val += 1
+            if x_val == 9:
+                y_val += 1
+                x_val = 0
+        else:
+            x_val -= 1
+
+            if x_val == -1:
+                y_val -= 1
+                x_val = 8
+
+            if given_grid[y_val][x_val] == 0:
+                forward = True
+
+    return temp_grid
+
 
 # Game settings
 GAME_NUMS = [pygame.K_1, pygame.K_2, pygame.K_3, pygame.K_4, pygame.K_5, pygame.K_6, pygame.K_7, pygame.K_8, pygame.K_9]
