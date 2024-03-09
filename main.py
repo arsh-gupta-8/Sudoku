@@ -149,7 +149,7 @@ def window_update(grid_rect, grid_hover, lines, game_grid, num_positions):
             current_num = game_grid[grid_y][grid_x]
             if current_num != 0:
                 num_display = number_font.render(str(current_num), False, BLACK)
-                if num_positions[0] != 100:
+                if len(num_positions) == 0 or num_positions[0] != 100:
                     if [grid_y, grid_x] not in num_positions:
                         num_display = number_font.render(str(current_num), False, SOL_RED)
                 x_pos = 80 + 50 * grid_x + grid_x * 2 + (grid_x // 3) * 3 - num_display.get_width()//2
